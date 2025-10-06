@@ -5,6 +5,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -16,6 +17,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Doctor {
     id: number;
@@ -24,6 +26,7 @@ interface Doctor {
     email: string;
     phone: string;
     address: string;
+    is_resident: boolean;
 }
 
 interface Props {
@@ -31,6 +34,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const isResident = ref(props.doctor.is_resident);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -142,6 +147,18 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                     autocomplete="street-address"
                                 />
                                 <InputError :message="errors.address" />
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <Checkbox
+                                    id="is_resident"
+                                    v-model:checked="isResident"
+                                />
+                                <input type="hidden" name="is_resident" :value="isResident ? '1' : '0'" />
+                                <Label for="is_resident" class="text-sm font-normal cursor-pointer">
+                                    Marcar como residente
+                                </Label>
+                                <InputError :message="errors.is_resident" />
                             </div>
                         </div>
 

@@ -14,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import {
     Card,
     CardContent,
@@ -44,6 +45,7 @@ interface Doctor {
     email: string;
     phone: string;
     address: string;
+    is_resident: boolean;
     created_at: string;
 }
 
@@ -258,6 +260,7 @@ const confirmDelete = () => {
                                     </TableHead>
                                     <TableHead class="text-center">Teléfono</TableHead>
                                     <TableHead class="text-center">Dirección</TableHead>
+                                    <TableHead class="text-center">Estado</TableHead>
                                     <TableHead class="text-center">
                                         Acciones
                                     </TableHead>
@@ -268,7 +271,7 @@ const confirmDelete = () => {
                                     v-if="filteredDoctors.length === 0"
                                 >
                                     <TableCell
-                                        colspan="6"
+                                        colspan="7"
                                         class="h-24 text-center"
                                     >
                                         <div class="flex flex-col items-center gap-2">
@@ -298,6 +301,11 @@ const confirmDelete = () => {
                                     </TableCell>
                                     <TableCell class="text-muted-foreground text-center max-w-xs truncate">
                                         {{ doctor.address }}
+                                    </TableCell>
+                                    <TableCell class="text-center">
+                                        <Badge :variant="doctor.is_resident ? 'default' : 'secondary'">
+                                            {{ doctor.is_resident ? 'Residente' : 'No Residente' }}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell class="text-center">
                                         <div class="flex items-center justify-center gap-2">

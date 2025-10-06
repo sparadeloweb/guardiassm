@@ -18,5 +18,6 @@ class Doctor extends Model
         'email',
         'phone',
         'address',
+        'is_resident',
     ];
 }

@@ -25,6 +25,7 @@ class DoctorFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
+            'is_resident' => fake()->boolean(),
         ];
     }
 }

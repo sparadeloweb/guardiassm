@@ -35,6 +35,7 @@ interface Doctor {
     email: string;
     phone: string;
     address: string;
+    is_resident: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -113,18 +114,26 @@ const formatDate = (date: string) => {
                                 <CardTitle class="text-2xl">{{
                                     doctor.name
                                 }}</CardTitle>
-                                <CardDescription class="mt-2">
-                                    <Badge variant="secondary">
-                                        <User class="mr-1 h-3 w-3" />
-                                        {{ doctor.age }} años
-                                    </Badge>
-                                </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
 
                     <CardContent class="space-y-6">
                         <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <User
+                                    class="h-5 w-5 text-muted-foreground mt-0.5"
+                                />
+                                <div>
+                                    <p class="text-sm font-medium">Edad</p>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ doctor.age }} años
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
                             <div class="flex items-start gap-3">
                                 <Mail
                                     class="h-5 w-5 text-muted-foreground mt-0.5"
@@ -163,6 +172,14 @@ const formatDate = (date: string) => {
                                         {{ doctor.address }}
                                     </p>
                                 </div>
+                            </div>
+
+                            <Separator />
+
+                            <div class="flex items-start gap-3">
+                                <Badge :variant="doctor.is_resident ? 'default' : 'secondary'" class="w-fit">
+                                    {{ doctor.is_resident ? 'Residente' : 'No Residente' }}
+                                </Badge>
                             </div>
                         </div>
                     </CardContent>

@@ -27,6 +27,7 @@ class StoreDoctorRequest extends FormRequest
             'email' => 'required|email|unique:doctors',
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
+            'is_resident' => 'required|boolean',
         ];
     }
 
@@ -54,6 +55,8 @@ class StoreDoctorRequest extends FormRequest
             'address.required' => 'La dirección es requerida',
             'address.string' => 'La dirección no es válida',
             'address.max' => 'La dirección no puede tener más de 255 caracteres',
+            'is_resident.required' => 'El estado de residencia es requerido',
+            'is_resident.boolean' => 'El estado de residencia no es válido',
         ];
     }
 }
