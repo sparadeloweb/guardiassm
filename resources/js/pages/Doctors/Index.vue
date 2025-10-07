@@ -159,13 +159,13 @@ const confirmDelete = () => {
         <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4">
             <div class="flex items-center justify-between">
                 <HeadingSmall
-                    title="Gestión de Doctores"
+                    title="Doctores"
                     description="Administra la información de los doctores del sistema"
                 />
                 <Button as-child>
                     <Link :href="DoctorsController.create().url">
                         <Plus class="mr-2 h-4 w-4" />
-                        Nuevo Doctor
+                        Crear Doctor
                     </Link>
                 </Button>
             </div>
@@ -258,12 +258,12 @@ const confirmDelete = () => {
                                             />
                                         </Button>
                                     </TableHead>
-                                    <TableHead class="text-center">Teléfono</TableHead>
-                                    <TableHead class="text-center">Dirección</TableHead>
-                                    <TableHead class="text-center">Estado</TableHead>
-                                    <TableHead class="text-center">
-                                        Acciones
-                                    </TableHead>
+                                      <TableHead class="text-center">Teléfono</TableHead>
+                                      <TableHead class="text-center">Dirección</TableHead>
+                                      <TableHead class="text-center">Rol</TableHead>
+                                      <TableHead class="text-center">
+                                          Acciones
+                                      </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -274,39 +274,37 @@ const confirmDelete = () => {
                                         colspan="7"
                                         class="h-24 text-center"
                                     >
-                                        <div class="flex flex-col items-center gap-2">
-                                            <Search class="h-8 w-8 text-muted-foreground" />
-                                            <p class="text-muted-foreground">
-                                                No se encontraron resultados para
-                                                "{{ searchQuery }}"
-                                            </p>
-                                        </div>
+                                        <EmptyState
+                                            :icon="Search"
+                                            title="No se encontraron resultados"
+                                            description="Intenta con otros términos de búsqueda"
+                                        />
                                     </TableCell>
                                 </TableRow>
                                 <TableRow
                                     v-for="doctor in filteredDoctors"
                                     :key="doctor.id"
                                 >
-                                    <TableCell class="font-medium text-center">
+                                    <TableCell class="font-medium text-center text-foreground">
                                         {{ doctor.name }}
                                     </TableCell>
-                                    <TableCell class="text-center">
+                                    <TableCell class="text-center text-foreground">
                                         {{ doctor.age }}
                                     </TableCell>
-                                    <TableCell class="text-muted-foreground text-center">
+                                    <TableCell class="text-center text-foreground">
                                         {{ doctor.email }}
                                     </TableCell>
-                                    <TableCell class="text-muted-foreground text-center">
+                                    <TableCell class="text-center text-foreground">
                                         {{ doctor.phone }}
                                     </TableCell>
-                                    <TableCell class="text-muted-foreground text-center max-w-xs truncate">
+                                    <TableCell class="text-center text-foreground max-w-xs truncate">
                                         {{ doctor.address }}
                                     </TableCell>
-                                    <TableCell class="text-center">
-                                        <Badge :variant="doctor.is_resident ? 'default' : 'secondary'">
-                                            {{ doctor.is_resident ? 'Residente' : 'No Residente' }}
-                                        </Badge>
-                                    </TableCell>
+                                     <TableCell class="text-center">
+                                         <Badge :variant="doctor.is_resident ? 'default' : 'secondary'">
+                                             {{ doctor.is_resident ? 'Residente' : 'Doctor' }}
+                                         </Badge>
+                                     </TableCell>
                                     <TableCell class="text-center">
                                         <div class="flex items-center justify-center gap-2">
                                             <Button

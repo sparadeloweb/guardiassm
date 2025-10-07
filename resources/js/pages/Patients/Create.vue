@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DoctorsController from '@/actions/App/Http/Controllers/Doctors/DoctorsController';
+import PatientsController from '@/actions/App/Http/Controllers/Patients/PatientsController';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -16,72 +16,65 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
-import { ref } from 'vue';
-
-const isResident = ref(false);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Doctores',
-        href: DoctorsController.index().url,
+        title: 'Pacientes',
+        href: PatientsController.index().url,
     },
     {
-        title: 'Crear Doctor',
-        href: DoctorsController.create().url,
+        title: 'Crear Paciente',
+        href: PatientsController.create().url,
     },
 ];
 </script>
 
 <template>
-    <Head title="Crear Doctor" />
+    <Head title="Crear Paciente" />
 
     <AppLayout :breadcrumbs="breadcrumbItems">
         <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4">
             <HeadingSmall
-                title="Crear Nuevo Doctor"
-                description="Completa los datos del doctor"
+                title="Crear Nuevo Paciente"
+                description="Completa los datos del paciente"
             />
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Información del Doctor</CardTitle>
+                    <CardTitle>Información del Paciente</CardTitle>
                     <CardDescription>
-                        Todos los campos son obligatorios
+                        El nombre y género son obligatorios, los demás campos son opcionales
                     </CardDescription>
                 </CardHeader>
 
                 <CardContent>
                     <Form
-                        v-bind="DoctorsController.store.form()"
+                        v-bind="PatientsController.store.form()"
                         class="space-y-6"
                         v-slot="{ errors, processing }"
                     >
-                        <div class="grid gap-4">
+                        <div class="grid gap-4 md:grid-cols-2">
                             <div class="grid gap-2">
-                                <Label for="name">Nombre Completo</Label>
+                                <Label for="name">Nombre Completo *</Label>
                                 <Input
                                     id="name"
                                     type="text"
                                     name="name"
-                                    placeholder="Dr. Juan Pérez"
+                                    placeholder="Juan Pérez"
                                     required
-                                    autocomplete="name"
                                 />
                                 <InputError :message="errors.name" />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="age">Edad</Label>
+                                <Label for="DNI">DNI</Label>
                                 <Input
-                                    id="age"
-                                    type="number"
-                                    name="age"
-                                    placeholder="35"
-                                    required
-                                    min="18"
-                                    max="100"
+                                    id="DNI"
+                                    type="text"
+                                    name="DNI"
+                                    placeholder="12345678"
                                 />
-                                <InputError :message="errors.age" />
+                                <InputError :message="errors.DNI" />
                             </div>
 
                             <div class="grid gap-2">
@@ -90,9 +83,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                     id="email"
                                     type="email"
                                     name="email"
-                                    placeholder="doctor@example.com"
-                                    required
-                                    autocomplete="email"
+                                    placeholder="paciente@example.com"
                                 />
                                 <InputError :message="errors.email" />
                             </div>
@@ -103,39 +94,45 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                     id="phone"
                                     type="tel"
                                     name="phone"
-                                    placeholder="+34 600 000 000"
-                                    required
-                                    autocomplete="tel"
+                                    placeholder="+54 11 1234 5678"
                                 />
                                 <InputError :message="errors.phone" />
                             </div>
 
                             <div class="grid gap-2">
+                                <Label for="gender">Género *</Label>
+                                <select
+                                    id="gender"
+                                    name="gender"
+                                    required
+                                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="">Seleccionar género</option>
+                                    <option value="male">Masculino</option>
+                                    <option value="female">Femenino</option>
+                                </select>
+                                <InputError :message="errors.gender" />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="birth_date">Fecha de Nacimiento</Label>
+                                <Input
+                                    id="birth_date"
+                                    type="date"
+                                    name="birth_date"
+                                />
+                                <InputError :message="errors.birth_date" />
+                            </div>
+
+                            <div class="grid gap-2 md:col-span-2">
                                 <Label for="address">Dirección</Label>
                                 <Input
                                     id="address"
                                     type="text"
                                     name="address"
-                                    placeholder="Calle Principal 123, Madrid"
-                                    required
-                                    autocomplete="street-address"
+                                    placeholder="Calle Principal 123, Ciudad"
                                 />
                                 <InputError :message="errors.address" />
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <input type="hidden" name="is_resident" :value="isResident ? 1 : 0" />
-                                <label class="flex items-center gap-2 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        v-model="isResident"
-                                        class="peer border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                                    />
-                                    <span class="text-sm font-normal">
-                                        Marcar como residente
-                                    </span>
-                                </label>
-                                <InputError :message="errors.is_resident" />
                             </div>
                         </div>
 
@@ -145,11 +142,11 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                     v-if="processing"
                                     class="mr-2 h-4 w-4 animate-spin"
                                 />
-                                Crear Doctor
+                                Crear Paciente
                             </Button>
 
                             <Button variant="outline" type="button" as-child>
-                                <Link :href="DoctorsController.index().url">
+                                <Link :href="PatientsController.index().url">
                                     Cancelar
                                 </Link>
                             </Button>

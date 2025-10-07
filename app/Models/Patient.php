@@ -6,16 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ShiftType extends Model
+class Patient extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'shift_types';
+    protected $table = 'patients';
 
     protected $fillable = [
         'name',
-        'description',
-        'value',
-        'patient_value',
+        'DNI',
+        'phone',
+        'address',
+        'email',
+        'gender',
+        'birth_date',
     ];
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DoctorsController from '@/actions/App/Http/Controllers/Doctors/DoctorsController';
-import DeleteDoctorDrawer from '@/components/DeleteDoctorDrawer.vue';
+import ShiftTypesController from '@/actions/App/Http/Controllers/Shifts/ShiftTypesController';
+import DeleteShiftTypeDrawer from '@/components/DeleteShiftTypeDrawer.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import SuccessDialog from '@/components/SuccessDialog.vue';
 import { Button } from '@/components/ui/button';
@@ -20,28 +20,24 @@ import { ref } from 'vue';
 import {
     Pencil,
     Trash2,
-    Mail,
-    Phone,
-    MapPin,
-    Calendar,
-    User,
     Briefcase,
+    FileText,
+    DollarSign,
+    Calendar,
 } from 'lucide-vue-next';
 
-interface Doctor {
+interface ShiftType {
     id: number;
     name: string;
-    age: number;
-    email: string;
-    phone: string;
-    address: string;
-    is_resident: boolean;
+    description: string;
+    value: number;
+    patient_value: number | null;
     created_at: string;
     updated_at: string;
 }
 
 interface Props {
-    doctor: Doctor;
+    shiftType: ShiftType;
     success?: string;
 }
 
@@ -49,12 +45,12 @@ const props = defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Doctores',
-        href: DoctorsController.index().url,
+        title: 'Tipos de Guardias',
+        href: ShiftTypesController.index().url,
     },
     {
-        title: props.doctor.name,
-        href: DoctorsController.show(props.doctor.id).url,
+        title: props.shiftType.name,
+        href: ShiftTypesController.show(props.shiftType.id).url,
     },
 ];
 
@@ -76,10 +72,9 @@ const openDeleteDrawer = () => {
 };
 
 const confirmDelete = () => {
-    router.delete(DoctorsController.destroy(props.doctor.id).url, {
+    router.delete(ShiftTypesController.destroy(props.shiftType.id).url, {
         onSuccess: () => {
-            isDeleteDrawerOpen.value = false;
-            isSuccessDialogOpen.value = true;
+            router.visit(ShiftTypesController.index().url);
         },
     });
 };
@@ -93,16 +88,24 @@ const formatDate = (date: string) => {
         minute: '2-digit',
     });
 };
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 2,
+    }).format(value);
+};
 </script>
 
 <template>
-    <Head :title="doctor.name" />
+    <Head :title="shiftType.name" />
 
     <AppLayout :breadcrumbs="breadcrumbItems">
         <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4">
             <HeadingSmall
-                :title="doctor.name"
-                description="Información completa del doctor"
+                :title="shiftType.name"
+                description="Información completa del tipo de guardia"
             />
 
             <div class="grid gap-6 md:grid-cols-3">
@@ -112,7 +115,7 @@ const formatDate = (date: string) => {
                         <div class="flex items-start justify-between">
                             <div>
                                 <CardTitle class="text-2xl">{{
-                                    doctor.name
+                                    shiftType.name
                                 }}</CardTitle>
                             </div>
                         </div>
@@ -121,69 +124,53 @@ const formatDate = (date: string) => {
                     <CardContent class="space-y-6">
                         <div class="space-y-4">
                             <div class="flex items-start gap-3">
-                                <User
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">Edad</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ doctor.age }} años
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <div class="flex items-start gap-3">
-                                <Mail
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">Email</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ doctor.email }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <div class="flex items-start gap-3">
-                                <Phone
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">Teléfono</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ doctor.phone }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <div class="flex items-start gap-3">
-                                <MapPin
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">Dirección</p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ doctor.address }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <div class="flex items-start gap-3">
                                 <Briefcase
                                     class="h-5 w-5 text-muted-foreground mt-0.5"
                                 />
                                 <div>
-                                    <p class="text-sm font-medium">Rol</p>
+                                    <p class="text-sm font-medium">Nombre</p>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ doctor.is_resident ? 'Residente' : 'Doctor' }}
+                                        {{ shiftType.name }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div class="flex items-start gap-3">
+                                <FileText
+                                    class="h-5 w-5 text-muted-foreground mt-0.5"
+                                />
+                                <div>
+                                    <p class="text-sm font-medium">Descripción</p>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ shiftType.description }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div class="flex items-start gap-3">
+                                <DollarSign
+                                    class="h-5 w-5 text-muted-foreground mt-0.5"
+                                />
+                                <div>
+                                    <p class="text-sm font-medium">Valor por hora</p>
+                                    <p class="text-sm text-muted-foreground font-mono">
+                                        {{ formatCurrency(shiftType.value) }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <DollarSign
+                                    class="h-5 w-5 text-muted-foreground mt-0.5"
+                                />
+                                <div>
+                                    <p class="text-sm font-medium">Valor paciente</p>
+                                    <p class="text-sm text-muted-foreground font-mono">
+                                        {{ shiftType.patient_value ? formatCurrency(shiftType.patient_value) : 'No especificado' }}
                                     </p>
                                 </div>
                             </div>
@@ -193,7 +180,7 @@ const formatDate = (date: string) => {
                     <CardFooter class="flex gap-2">
                         <Button variant="default" size="sm" as-child>
                             <Link
-                                :href="DoctorsController.edit(doctor.id).url"
+                                :href="ShiftTypesController.edit(shiftType.id).url"
                             >
                                 <Pencil class="mr-2 h-4 w-4" />
                                 Editar
@@ -211,52 +198,49 @@ const formatDate = (date: string) => {
                 </Card>
 
                 <!-- Información Adicional -->
-                <div class="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle class="text-lg">
-                                Información del Registro
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent class="space-y-4">
-                            <div class="flex items-start gap-3">
-                                <Calendar
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">
-                                        Fecha de Creación
-                                    </p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ formatDate(doctor.created_at) }}
-                                    </p>
-                                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Información Adicional</CardTitle>
+                        <CardDescription>
+                            Datos del registro
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <Calendar
+                                class="h-5 w-5 text-muted-foreground mt-0.5"
+                            />
+                            <div>
+                                <p class="text-sm font-medium">Creado</p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{ formatDate(shiftType.created_at) }}
+                                </p>
                             </div>
+                        </div>
 
-                            <Separator />
+                        <Separator />
 
-                            <div class="flex items-start gap-3">
-                                <Calendar
-                                    class="h-5 w-5 text-muted-foreground mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm font-medium">
-                                        Última Actualización
-                                    </p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ formatDate(doctor.updated_at) }}
-                                    </p>
-                                </div>
+                        <div class="flex items-start gap-3">
+                            <Calendar
+                                class="h-5 w-5 text-muted-foreground mt-0.5"
+                            />
+                            <div>
+                                <p class="text-sm font-medium">
+                                    Última actualización
+                                </p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{ formatDate(shiftType.updated_at) }}
+                                </p>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <!-- Drawer de confirmación de eliminación -->
-            <DeleteDoctorDrawer
+            <DeleteShiftTypeDrawer
                 v-model:open="isDeleteDrawerOpen"
-                :doctor="doctor"
+                :shift-type="shiftType"
                 @confirm="confirmDelete"
             />
 

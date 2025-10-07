@@ -13,9 +13,13 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import doctors from '@/routes/doctors';
+import shiftTypes from '@/routes/shift-types';
+import shifts from '@/routes/shifts';
+import patients from '@/routes/patients';
+import pathologies from '@/routes/pathologies';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, User } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, User, Briefcase, Calendar, Heart, Stethoscope, Clock } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -28,7 +32,39 @@ const mainNavItems: NavItem[] = [
         title: 'Doctores',
         href: doctors.index(),
         icon: User,
-    }
+    },
+    {
+        title: 'Pacientes',
+        icon: Heart,
+        items: [
+            {
+                title: 'Pacientes',
+                href: patients.index(),
+                icon: Heart,
+            },
+            {
+                title: 'Patologías',
+                href: pathologies.index(),
+                icon: Stethoscope,
+            },
+        ],
+    },
+    {
+        title: 'Guardias',
+        icon: Calendar,
+        items: [
+            {
+                title: 'Guardias',
+                href: shifts.index(),
+                icon: Clock,
+            },
+            {
+                title: 'Tipos de Guardias',
+                href: shiftTypes.index(),
+                icon: Briefcase,
+            },
+        ],
+    },
 ];
 </script>
 

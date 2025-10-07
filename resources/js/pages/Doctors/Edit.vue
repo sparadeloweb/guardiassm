@@ -5,7 +5,6 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -31,11 +30,12 @@ interface Doctor {
 
 interface Props {
     doctor: Doctor;
+    success?: string;
 }
 
 const props = defineProps<Props>();
 
-const isResident = ref(props.doctor.is_resident);
+const isResident = ref(!!props.doctor.is_resident);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -150,14 +150,17 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <Checkbox
-                                    id="is_resident"
-                                    v-model:checked="isResident"
-                                />
-                                <input type="hidden" name="is_resident" :value="isResident ? '1' : '0'" />
-                                <Label for="is_resident" class="text-sm font-normal cursor-pointer">
-                                    Marcar como residente
-                                </Label>
+                                <input type="hidden" name="is_resident" :value="isResident ? 1 : 0" />
+                                <label class="flex items-center gap-2 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        v-model="isResident"
+                                        class="peer border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                                    />
+                                    <span class="text-sm font-normal">
+                                        Marcar como residente
+                                    </span>
+                                </label>
                                 <InputError :message="errors.is_resident" />
                             </div>
                         </div>
