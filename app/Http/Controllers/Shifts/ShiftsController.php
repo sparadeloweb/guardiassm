@@ -3,24 +3,27 @@
 namespace App\Http\Controllers\Shifts;
 
 use App\Http\Controllers\Controller;
-use App\Services\Contracts\ShiftServiceInterface;
-use App\Services\Contracts\DoctorServiceInterface;
-use App\Services\Contracts\ShiftTypeServiceInterface;
-use App\Services\Contracts\PatientServiceInterface;
-use App\Services\Contracts\PathologyServiceInterface;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\UpdateShiftRequest;
+use App\Services\Contracts\DoctorServiceInterface;
+use App\Services\Contracts\PathologyServiceInterface;
+use App\Services\Contracts\PatientServiceInterface;
+use App\Services\Contracts\ShiftServiceInterface;
+use App\Services\Contracts\ShiftTypeServiceInterface;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-
 class ShiftsController extends Controller
 {
     private $shiftService;
+
     private $doctorService;
+
     private $shiftTypeService;
+
     private $patientService;
+
     private $pathologyService;
 
     public function __construct(
@@ -39,21 +42,19 @@ class ShiftsController extends Controller
 
     /**
      * Muestra la lista de turnos.
-     * @return \Inertia\Response
-    */
+     */
     public function index(): Response
     {
         $shifts = $this->shiftService->getAllShifts();
 
         return Inertia::render('Shifts/Index', [
-            'shifts' => $shifts
+            'shifts' => $shifts,
         ]);
     }
 
     /**
      * Muestra el formulario para crear un nuevo turno.
-     * @return \Inertia\Response
-    */
+     */
     public function create(): Response
     {
         $doctors = $this->doctorService->getAllDoctors();
@@ -71,13 +72,12 @@ class ShiftsController extends Controller
 
     /**
      * Guarda un nuevo turno.
-     * @param StoreShiftRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function store(StoreShiftRequest $request): RedirectResponse
     {
         try {
             $this->shiftService->createShift($request->validated());
+
             return redirect()->route('shifts.index')->with('success', 'Guardia creada correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -86,32 +86,28 @@ class ShiftsController extends Controller
 
     /**
      * Muestra un turno.
-     * @param string $id
-     * @return \Inertia\Response
-    */
+     */
     public function show(string $id): Response
     {
         $shift = $this->shiftService->getShiftById($id);
 
-        if (!$shift) {
+        if (! $shift) {
             abort(404, 'Turno no encontrado');
         }
 
         return Inertia::render('Shifts/Show', [
-            'shift' => $shift
+            'shift' => $shift,
         ]);
     }
 
     /**
      * Muestra el formulario para editar un turno.
-     * @param string $id
-     * @return \Inertia\Response
-    */
+     */
     public function edit(string $id): Response
     {
         $shift = $this->shiftService->getShiftById($id);
 
-        if (!$shift) {
+        if (! $shift) {
             abort(404, 'Turno no encontrado');
         }
 
@@ -126,14 +122,12 @@ class ShiftsController extends Controller
 
     /**
      * Actualiza un turno.
-     * @param UpdateShiftRequest $request
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function update(UpdateShiftRequest $request, string $id): RedirectResponse
     {
         try {
             $this->shiftService->updateShift($id, $request->validated());
+
             return redirect()->route('shifts.show', $id)->with('success', 'Turno actualizado correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -142,13 +136,34 @@ class ShiftsController extends Controller
 
     /**
      * Elimina un turno.
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function destroy(string $id): RedirectResponse
     {
         $this->shiftService->deleteShift($id);
 
         return redirect()->route('shifts.index')->with('success', 'Turno eliminado correctamente');
+    }
+
+    /**
+     * Marca un turno como pagado.
+     */
+    public function markAsPaid(string $id): RedirectResponse
+    {
+        $this->shiftService->markAsPaid($id);
+
+        return redirect()->route('shifts.show', $id)->with('success', 'Turno marcado como pagado correctamente');
+    }
+
+    /**
+     * Muestra el calendario de guardias.
+     */
+    public function calendar(\Illuminate\Http\Request $request): Response
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $calendarData = $this->shiftService->getShiftsForCalendar($month, $year);
+
+        return Inertia::render('Shifts/Calendar', $calendarData);
     }
 }

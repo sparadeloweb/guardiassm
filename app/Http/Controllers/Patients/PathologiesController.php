@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Patients;
 
 use App\Http\Controllers\Controller;
-use App\Services\Contracts\PathologyServiceInterface;
 use App\Http\Requests\StorePathologyRequest;
 use App\Http\Requests\UpdatePathologyRequest;
+use App\Services\Contracts\PathologyServiceInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,21 +22,19 @@ class PathologiesController extends Controller
 
     /**
      * Muestra el listado de patologías.
-     * @return \Inertia\Response
-    */
+     */
     public function index(): Response
     {
         $pathologies = $this->pathologyService->getAllPathologies();
 
         return Inertia::render('Pathologies/Index', [
-            'pathologies' => $pathologies
+            'pathologies' => $pathologies,
         ]);
     }
 
     /**
      * Muestra el formulario para crear una patología.
-     * @return \Inertia\Response
-    */
+     */
     public function create(): Response
     {
         return Inertia::render('Pathologies/Create');
@@ -43,50 +42,53 @@ class PathologiesController extends Controller
 
     /**
      * Crea una patología.
-     * @param \App\Http\Requests\StorePathologyRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-    */
-    public function store(StorePathologyRequest $request): RedirectResponse
+     */
+    public function store(StorePathologyRequest $request): RedirectResponse|JsonResponse
     {
-        $this->pathologyService->createPathology($request->validated());
+        $pathology = $this->pathologyService->createPathology($request->validated());
 
-        return redirect()->route('pathologies.index')->with('success', 'Patología creada correctamente');
+        // Si es una petición API (desde drawer), retornar JSON
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Patología creada correctamente',
+                'data' => $pathology,
+            ], 201);
+        }
+
+        // Si es una petición normal, redireccionar al index
+        return redirect()
+            ->route('pathologies.index')
+            ->with('success', 'Patología creada correctamente');
     }
 
     /**
      * Muestra una patología.
-     * @param int $id
-     * @return \Inertia\Response
-    */
+     */
     public function show(int $id): Response
     {
         $pathology = $this->pathologyService->getPathologyById($id);
 
         return Inertia::render('Pathologies/Show', [
-            'pathology' => $pathology
+            'pathology' => $pathology,
         ]);
     }
 
     /**
      * Muestra el formulario para editar una patología.
-     * @param int $id
-     * @return \Inertia\Response
-    */
+     */
     public function edit(int $id): Response
     {
         $pathology = $this->pathologyService->getPathologyById($id);
 
         return Inertia::render('Pathologies/Edit', [
-            'pathology' => $pathology
+            'pathology' => $pathology,
         ]);
     }
 
     /**
      * Actualiza una patología.
-     * @param \App\Http\Requests\UpdatePathologyRequest $request
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function update(UpdatePathologyRequest $request, int $id): RedirectResponse
     {
         $this->pathologyService->updatePathology($id, $request->validated());
@@ -96,9 +98,7 @@ class PathologiesController extends Controller
 
     /**
      * Elimina una patología.
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function destroy(int $id): RedirectResponse
     {
         $this->pathologyService->deletePathology($id);

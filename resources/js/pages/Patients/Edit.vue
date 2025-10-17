@@ -23,6 +23,7 @@ interface Patient {
     DNI: string | null;
     phone: string | null;
     address: string | null;
+    health_insurance: string | null;
     email: string | null;
     gender: string | null;
     birth_date: string | null;
@@ -164,6 +165,18 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                     placeholder="Calle Principal 123, Ciudad"
                                 />
                                 <InputError :message="errors.address" />
+                            </div>
+
+                            <div class="grid gap-2 md:col-span-2">
+                                <Label for="health_insurance">Obra Social</Label>
+                                <Input
+                                    id="health_insurance"
+                                    type="text"
+                                    name="health_insurance"
+                                    :default-value="patient.health_insurance || ''"
+                                    placeholder="OSDE, Swiss Medical, etc."
+                                />
+                                <InputError :message="errors.health_insurance" />
                             </div>
                         </div>
 

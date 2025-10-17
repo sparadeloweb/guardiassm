@@ -27,13 +27,19 @@ class PathologyRepository implements PathologyRepositoryInterface
     }
 
     /**
-     * Devuelve una patología por su ID.
+     * Devuelve una patología por su ID con todas sus relaciones.
+     *
      * @param int $id
      * @return \Illuminate\Database\Eloquent\Model
-    */
+     */
     public function getPathologyById(int $id): Model
     {
-        return $this->pathology->findOrFail($id);
+        return $this->pathology->with([
+            'attentions.patient',
+            'attentions.shift',
+            'attentions.shift.doctor',
+            'attentions.shift.shiftType',
+        ])->findOrFail($id);
     }
 
     /**

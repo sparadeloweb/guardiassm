@@ -27,13 +27,18 @@ class ShiftTypeRepository implements ShiftTypeRepositoryInterface
     }
 
     /**
-     * Devuelve un tipo de turno por su ID.
+     * Devuelve un tipo de turno por su ID con todas sus relaciones.
+     *
      * @param int $id
      * @return \Illuminate\Database\Eloquent\Model
-    */
+     */
     public function getShiftTypeById(int $id): Model
     {
-        return $this->shiftType->find($id);
+        return $this->shiftType->with([
+            'shifts.doctor',
+            'shifts.attentions.patient',
+            'shifts.attentions.pathologies',
+        ])->findOrFail($id);
     }
 
     /**

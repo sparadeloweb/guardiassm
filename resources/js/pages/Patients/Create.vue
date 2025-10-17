@@ -134,6 +134,17 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                 />
                                 <InputError :message="errors.address" />
                             </div>
+
+                            <div class="grid gap-2 md:col-span-2">
+                                <Label for="health_insurance">Obra Social</Label>
+                                <Input
+                                    id="health_insurance"
+                                    type="text"
+                                    name="health_insurance"
+                                    placeholder="OSDE, Swiss Medical, etc."
+                                />
+                                <InputError :message="errors.health_insurance" />
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-4">

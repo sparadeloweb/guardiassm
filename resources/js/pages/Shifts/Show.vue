@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ShiftsController from '@/actions/App/Http/Controllers/Shifts/ShiftsController';
+import PathologiesController from '@/actions/App/Http/Controllers/Patients/PathologiesController';
 import DoctorsController from '@/actions/App/Http/Controllers/Doctors/DoctorsController';
 import ShiftTypesController from '@/actions/App/Http/Controllers/Shifts/ShiftTypesController';
 import PatientsController from '@/actions/App/Http/Controllers/Patients/PatientsController';
@@ -32,6 +33,7 @@ import {
     DollarSign,
     FileText,
     ExternalLink,
+    Check,
 } from 'lucide-vue-next';
 
 interface Doctor {
@@ -155,7 +157,7 @@ const getPaymentStatus = (paidAt: string | null) => {
 
 // Función para obtener el color del badge de estado
 const getPaymentStatusColor = (paidAt: string | null) => {
-    return paidAt ? 'default' : 'secondary';
+    return paidAt ? 'default' : 'destructive';
 };
 
 // Función para confirmar eliminación
@@ -175,6 +177,28 @@ const getPathologyName = (pathologyId: number) => {
         .find(p => p.id === pathologyId);
     return pathology ? pathology.name : '';
 };
+
+// Función para marcar como pagada
+const markAsPaid = () => {
+    router.put(`/shifts/${props.shift.id}/mark-as-paid`, {}, {
+        onSuccess: () => {
+            successMessage.value = 'Guardia marcada como pagada correctamente';
+            showSuccessDialog.value = true;
+        },
+        onError: (errors) => {
+            console.error('Error al marcar como pagada:', errors);
+            successMessage.value = 'Error al marcar como pagada';
+            showSuccessDialog.value = true;
+        }
+    });
+};
+
+// Función para cerrar el modal de éxito y recargar los datos
+const closeSuccessDialog = () => {
+    showSuccessDialog.value = false;
+    // Recargar solo los datos del shift para actualizar el estado de pago
+    router.reload({ only: ['shift'] });
+};
 </script>
 
 <template>
@@ -193,6 +217,14 @@ const getPathologyName = (pathologyId: number) => {
                             Editar
                         </Link>
                     </Button>
+            <Button
+                v-if="!shift.paid_at"
+                variant="default"
+                @click="markAsPaid"
+            >
+                <Check class="mr-2 h-4 w-4" />
+                Marcar como Pagada
+            </Button>
                     <Button variant="destructive" @click="showDeleteDrawer = true">
                         <Trash2 class="mr-2 h-4 w-4" />
                         Eliminar
@@ -287,9 +319,14 @@ const getPathologyName = (pathologyId: number) => {
                                     <Calendar class="h-4 w-4" />
                                     Estado de Pago
                                 </div>
-                                <Badge :variant="getPaymentStatusColor(shift.paid_at)">
-                                    {{ getPaymentStatus(shift.paid_at) }}
-                                </Badge>
+                                <div class="text-right">
+                                    <Badge :variant="getPaymentStatusColor(shift.paid_at)">
+                                        {{ getPaymentStatus(shift.paid_at) }}
+                                    </Badge>
+                                    <div v-if="shift.paid_at" class="text-xs text-muted-foreground mt-1">
+                                        Pagado el {{ formatDateTime(shift.paid_at) }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -409,15 +446,21 @@ const getPathologyName = (pathologyId: number) => {
                                         {{ attention.notes }}
                                     </div>
                                     <div v-if="attention.pathologies.length > 0" class="flex flex-wrap gap-1">
-                                        <Badge
+                                        <Link
                                             v-for="pathology in attention.pathologies"
                                             :key="pathology.id"
-                                            variant="secondary"
-                                            class="text-xs"
+                                            :href="PathologiesController.show(pathology.id).url"
+                                            class="inline-block"
                                         >
-                                            <Stethoscope class="mr-1 h-3 w-3" />
-                                            {{ pathology.name }}
-                                        </Badge>
+                                            <Badge
+                                                variant="secondary"
+                                                class="text-xs hover:bg-secondary/80 transition-colors cursor-pointer font-medium text-primary hover:text-primary/80 underline decoration-dotted underline-offset-2 flex items-center gap-1"
+                                            >
+                                                <Stethoscope class="h-3 w-3" />
+                                                {{ pathology.name }}
+                                                <ExternalLink class="h-3 w-3" />
+                                            </Badge>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -438,6 +481,6 @@ const getPathologyName = (pathologyId: number) => {
     <SuccessDialog
         :open="showSuccessDialog"
         :message="successMessage"
-        @close="showSuccessDialog = false"
+        @close="closeSuccessDialog"
     />
 </template>

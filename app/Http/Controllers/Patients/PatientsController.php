@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Patients;
 
 use App\Http\Controllers\Controller;
-use App\Services\Contracts\PatientServiceInterface;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Services\Contracts\PatientServiceInterface;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
 
 class PatientsController extends Controller
 {
@@ -21,8 +22,7 @@ class PatientsController extends Controller
 
     /**
      * Muestra la lista de pacientes.
-     * @return \Inertia\Response
-    */
+     */
     public function index(): Response
     {
         $patients = $this->patientService->getAllPatients();
@@ -34,31 +34,37 @@ class PatientsController extends Controller
 
     /**
      * Muestra el formulario de creación de paciente.
-     * @return \Inertia\Response
-    */
+     */
     public function create(): Response
     {
         return Inertia::render('Patients/Create');
     }
 
-
     /**
      * Guarda un nuevo paciente.
-     * @param StorePatientRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-    */
-    public function store(StorePatientRequest $request): RedirectResponse
+     */
+    public function store(StorePatientRequest $request): RedirectResponse|JsonResponse
     {
-        $this->patientService->createPatient($request->validated());
+        $patient = $this->patientService->createPatient($request->validated());
 
-        return redirect()->route('patients.index')->with('success', 'Paciente creado correctamente');
+        // Si es una petición API (desde drawer), retornar JSON
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Paciente creado correctamente',
+                'data' => $patient,
+            ], 201);
+        }
+
+        // Si es una petición normal, redireccionar al index
+        return redirect()
+            ->route('patients.index')
+            ->with('success', 'Paciente creado correctamente');
     }
 
     /**
      * Muestra un paciente específico.
-     * @param string $id
-     * @return \Inertia\Response
-    */
+     */
     public function show(string $id): Response
     {
         return Inertia::render('Patients/Show', [
@@ -68,9 +74,7 @@ class PatientsController extends Controller
 
     /**
      * Muestra el formulario de edición de paciente.
-     * @param string $id
-     * @return \Inertia\Response
-    */
+     */
     public function edit(string $id): Response
     {
         return Inertia::render('Patients/Edit', [
@@ -80,10 +84,7 @@ class PatientsController extends Controller
 
     /**
      * Actualiza un paciente.
-     * @param UpdatePatientRequest $request
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function update(UpdatePatientRequest $request, string $id): RedirectResponse
     {
         $this->patientService->updatePatient($id, $request->validated());
@@ -93,9 +94,7 @@ class PatientsController extends Controller
 
     /**
      * Elimina un paciente.
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-    */
+     */
     public function destroy(string $id): RedirectResponse
     {
         $this->patientService->deletePatient($id);

@@ -18,7 +18,7 @@ class StorePatientRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-    */
+     */
     public function rules(): array
     {
         return [
@@ -26,6 +26,7 @@ class StorePatientRequest extends FormRequest
             'DNI' => 'nullable|string|max:255|unique:patients,DNI',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
+            'health_insurance' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'gender' => 'required|string|in:male,female',
             'birth_date' => 'nullable|date',
@@ -36,7 +37,7 @@ class StorePatientRequest extends FormRequest
      * Get the error messages for the defined validation rules.
      *
      * @return array<string, string>
-    */
+     */
     public function messages(): array
     {
         return [
@@ -50,6 +51,8 @@ class StorePatientRequest extends FormRequest
             'phone.max' => 'El teléfono debe tener menos de 255 caracteres',
             'address.string' => 'La dirección debe ser un texto',
             'address.max' => 'La dirección debe tener menos de 255 caracteres',
+            'health_insurance.string' => 'La obra social debe ser un texto',
+            'health_insurance.max' => 'La obra social debe tener menos de 255 caracteres',
             'email.string' => 'El email debe ser un texto',
             'email.max' => 'El email debe tener menos de 255 caracteres',
             'email.email' => 'El email debe ser una dirección de email válida',

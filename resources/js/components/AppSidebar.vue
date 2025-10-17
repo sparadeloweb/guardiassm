@@ -19,7 +19,7 @@ import patients from '@/routes/patients';
 import pathologies from '@/routes/pathologies';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, User, Briefcase, Calendar, Heart, Stethoscope, Clock } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, User, Briefcase, Calendar, Heart, Stethoscope, Clock, CalendarDays } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -57,6 +57,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Guardias',
                 href: shifts.index(),
                 icon: Clock,
+            },
+            {
+                title: 'Calendario',
+                href: shifts.calendar(),
+                icon: CalendarDays,
             },
             {
                 title: 'Tipos de Guardias',

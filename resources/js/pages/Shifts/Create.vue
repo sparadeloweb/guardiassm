@@ -17,8 +17,12 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Form, Head, Link, useForm } from '@inertiajs/vue3';
-import { LoaderCircle, Plus, Trash2, Clock, User, Stethoscope, AlertTriangle } from 'lucide-vue-next';
+import { LoaderCircle, Plus, Trash2, Clock, User, Stethoscope, AlertTriangle, PlusCircle } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted } from 'vue';
+import CreateDoctorDrawer from '@/components/CreateDoctorDrawer.vue';
+import CreateShiftTypeDrawer from '@/components/CreateShiftTypeDrawer.vue';
+import CreatePatientDrawer from '@/components/CreatePatientDrawer.vue';
+import CreatePathologyDrawer from '@/components/CreatePathologyDrawer.vue';
 
 interface Doctor {
     id: number;
@@ -51,6 +55,18 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// Estados para los drawers
+const showDoctorDrawer = ref(false);
+const showShiftTypeDrawer = ref(false);
+const showPatientDrawer = ref(false);
+const showPathologyDrawer = ref(false);
+
+// Listas reactivas
+const doctorsList = ref<Doctor[]>([...props.doctors]);
+const shiftTypesList = ref<ShiftType[]>([...props.shiftTypes]);
+const patientsList = ref<Patient[]>([...props.patients]);
+const pathologiesList = ref<Pathology[]>([...props.pathologies]);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -128,9 +144,33 @@ const clearFormState = () => {
     localStorage.removeItem(FORM_STORAGE_KEY);
 };
 
+// Funciones para manejar la creación de nuevos elementos
+const handleDoctorCreated = (doctor: Doctor) => {
+    doctorsList.value.push(doctor);
+    form.doctor_id = doctor.id.toString();
+};
+
+const handleShiftTypeCreated = (shiftType: ShiftType) => {
+    shiftTypesList.value.push(shiftType);
+    form.shift_type_id = shiftType.id.toString();
+};
+
+const handlePatientCreated = (patient: Patient) => {
+    patientsList.value.push(patient);
+    // Si hay una atención en proceso sin paciente, asignarle el nuevo paciente
+    const emptyAttention = form.attentions.find(att => !att.patient_id);
+    if (emptyAttention) {
+        emptyAttention.patient_id = patient.id.toString();
+    }
+};
+
+const handlePathologyCreated = (pathology: Pathology) => {
+    pathologiesList.value.push(pathology);
+};
+
 // Computed para el tipo de guardia seleccionado
 const selectedShiftType = computed(() => {
-    return props.shiftTypes.find(st => st.id === parseInt(form.shift_type_id));
+    return shiftTypesList.value.find(st => st.id === parseInt(form.shift_type_id));
 });
 
 // Computed para calcular duración en horas
@@ -190,42 +230,52 @@ const isPathologySelected = (attentionIndex: number, pathologyId: number) => {
 // Función para filtrar patologías por búsqueda
 const getFilteredPathologies = (attentionIndex: number) => {
     const searchTerm = pathologySearch.value[attentionIndex]?.toLowerCase() || '';
-    if (!searchTerm) return props.pathologies;
-    return props.pathologies.filter(pathology =>
+    if (!searchTerm) return pathologiesList.value;
+    return pathologiesList.value.filter(pathology =>
         pathology.name.toLowerCase().includes(searchTerm)
     );
 };
 
 // Función para obtener el nombre del paciente
 const getPatientName = (patientId: string) => {
-    const patient = props.patients.find(p => p.id === parseInt(patientId));
+    const patient = patientsList.value.find(p => p.id === parseInt(patientId));
     return patient ? `${patient.name} - DNI: ${patient.DNI}` : '';
 };
 
 // Función para obtener el nombre de la patología
 const getPathologyName = (pathologyId: number) => {
-    const pathology = props.pathologies.find(p => p.id === pathologyId);
+    const pathology = pathologiesList.value.find(p => p.id === pathologyId);
     return pathology ? pathology.name : '';
 };
 
 // Función para formatear fecha y hora para input datetime-local
 const formatDateTimeForInput = (dateTime: string) => {
+    // Convert from MySQL format (YYYY-MM-DD HH:MM:SS) to input format (YYYY-MM-DDTHH:MM)
     if (!dateTime) return '';
-    const date = new Date(dateTime);
-    return date.toISOString().slice(0, 16);
+
+    // If already in input format, return as is
+    if (dateTime.includes('T')) {
+        return dateTime.slice(0, 16);
+    }
+
+    // Convert from MySQL format to input format without timezone conversion
+    return dateTime.replace(' ', 'T').slice(0, 16);
 };
 
 // Función para formatear fecha y hora desde input datetime-local
 const formatDateTimeFromInput = (dateTimeInput: string) => {
     if (!dateTimeInput) return '';
-    // Convertir a formato MySQL compatible (YYYY-MM-DD HH:MM:SS)
-    const date = new Date(dateTimeInput);
-    return date.getFullYear() + '-' +
-           String(date.getMonth() + 1).padStart(2, '0') + '-' +
-           String(date.getDate()).padStart(2, '0') + ' ' +
-           String(date.getHours()).padStart(2, '0') + ':' +
-           String(date.getMinutes()).padStart(2, '0') + ':' +
-           String(date.getSeconds()).padStart(2, '0');
+
+    // Convert directly without timezone conversion to avoid the 3-hour shift
+    // Extract date and time components manually
+    const [datePart, timePart] = dateTimeInput.split('T');
+    if (!datePart || !timePart) return dateTimeInput;
+
+    // Ensure we have seconds
+    const timeWithSeconds = timePart.split(':').length === 2 ? timePart + ':00' : timePart;
+
+    // Return in MySQL format without timezone conversion
+    return `${datePart} ${timeWithSeconds}`;
 };
 
 // Función para validar horario de atención
@@ -365,7 +415,18 @@ const submit = () => {
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <!-- Doctor -->
                             <div class="grid gap-2">
-                                <Label for="doctor_id">Doctor *</Label>
+                                <div class="flex items-center justify-between">
+                                    <Label for="doctor_id">Doctor *</Label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-6 w-6"
+                                        @click="showDoctorDrawer = true"
+                                    >
+                                        <PlusCircle class="h-4 w-4" />
+                                    </Button>
+                                </div>
                                 <select
                                     id="doctor_id"
                                     v-model="form.doctor_id"
@@ -374,7 +435,7 @@ const submit = () => {
                                 >
                                     <option value="">Seleccionar doctor</option>
                                     <option
-                                        v-for="doctor in doctors"
+                                        v-for="doctor in doctorsList"
                                         :key="doctor.id"
                                         :value="doctor.id"
                                     >
@@ -386,7 +447,18 @@ const submit = () => {
 
                             <!-- Tipo de Guardia -->
                             <div class="grid gap-2">
-                                <Label for="shift_type_id">Tipo de Guardia *</Label>
+                                <div class="flex items-center justify-between">
+                                    <Label for="shift_type_id">Tipo de Guardia *</Label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-6 w-6"
+                                        @click="showShiftTypeDrawer = true"
+                                    >
+                                        <PlusCircle class="h-4 w-4" />
+                                    </Button>
+                                </div>
                                 <select
                                     id="shift_type_id"
                                     v-model="form.shift_type_id"
@@ -395,7 +467,7 @@ const submit = () => {
                                 >
                                     <option value="">Seleccionar tipo</option>
                                     <option
-                                        v-for="shiftType in shiftTypes"
+                                        v-for="shiftType in shiftTypesList"
                                         :key="shiftType.id"
                                         :value="shiftType.id"
                                     >
@@ -491,7 +563,18 @@ const submit = () => {
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <!-- Paciente -->
                                     <div class="grid gap-2">
-                                        <Label :for="`patient_${index}`">Paciente *</Label>
+                                        <div class="flex items-center justify-between">
+                                            <Label :for="`patient_${index}`">Paciente *</Label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                class="h-6 w-6"
+                                                @click="showPatientDrawer = true"
+                                            >
+                                                <PlusCircle class="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                         <select
                                             :id="`patient_${index}`"
                                             v-model="attention.patient_id"
@@ -500,7 +583,7 @@ const submit = () => {
                                         >
                                             <option value="">Seleccionar paciente</option>
                                             <option
-                                                v-for="patient in patients"
+                                                v-for="patient in patientsList"
                                                 :key="patient.id"
                                                 :value="patient.id"
                                             >
@@ -543,7 +626,18 @@ const submit = () => {
 
                         <!-- Patologías -->
                         <div class="mt-4">
-                            <Label class="mb-3 block text-sm font-medium">Patologías <span class="text-muted-foreground">(opcional)</span></Label>
+                            <div class="flex items-center justify-between mb-3">
+                                <Label class="text-sm font-medium">Patologías <span class="text-muted-foreground">(opcional)</span></Label>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-6 w-6"
+                                    @click="showPathologyDrawer = true"
+                                >
+                                    <PlusCircle class="h-4 w-4" />
+                                </Button>
+                            </div>
 
                             <!-- Búsqueda de patologías -->
                             <div class="mb-3">
@@ -627,5 +721,23 @@ const submit = () => {
                 </div>
             </Form>
         </div>
+
+        <!-- Drawers para crear nuevos registros -->
+        <CreateDoctorDrawer
+            v-model:open="showDoctorDrawer"
+            @created="handleDoctorCreated"
+        />
+        <CreateShiftTypeDrawer
+            v-model:open="showShiftTypeDrawer"
+            @created="handleShiftTypeCreated"
+        />
+        <CreatePatientDrawer
+            v-model:open="showPatientDrawer"
+            @created="handlePatientCreated"
+        />
+        <CreatePathologyDrawer
+            v-model:open="showPathologyDrawer"
+            @created="handlePathologyCreated"
+        />
     </AppLayout>
 </template>

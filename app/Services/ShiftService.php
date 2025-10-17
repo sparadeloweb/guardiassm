@@ -2,19 +2,20 @@
 
 namespace App\Services;
 
-use App\Services\Contracts\ShiftServiceInterface;
+use App\Repositories\Contracts\AttentionRepositoryInterface;
 use App\Repositories\Contracts\ShiftRepositoryInterface;
 use App\Repositories\Contracts\ShiftTypeRepositoryInterface;
-use App\Repositories\Contracts\AttentionRepositoryInterface;
+use App\Services\Contracts\ShiftServiceInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class ShiftService implements ShiftServiceInterface
 {
     private $shiftRepository;
+
     private $shiftTypeRepository;
+
     private $attentionRepository;
 
     public function __construct(
@@ -29,8 +30,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Devuelve el listado de turnos.
-     * @return \Illuminate\Database\Eloquent\Collection
-    */
+     */
     public function getAllShifts(): Collection
     {
         return $this->shiftRepository->getAllShifts();
@@ -38,9 +38,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Devuelve un turno por su ID.
-     * @param int $id
-     * @return \Illuminate\Database\Eloquent\Model
-    */
+     */
     public function getShiftById(int $id): ?Model
     {
         return $this->shiftRepository->getShiftById($id);
@@ -48,9 +46,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Crea un nuevo turno con sus atenciones.
-     * @param array $data
-     * @return \Illuminate\Database\Eloquent\Model
-    */
+     */
     public function createShift(array $data): Model
     {
         return DB::transaction(function () use ($data) {
@@ -97,10 +93,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Actualiza un turno existente con sus atenciones.
-     * @param int $id
-     * @param array $data
-     * @return bool
-    */
+     */
     public function updateShift(int $id, array $data): bool
     {
         return DB::transaction(function () use ($id, $data) {
@@ -154,9 +147,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Elimina un turno y todas sus atenciones.
-     * @param int $id
-     * @return bool
-    */
+     */
     public function deleteShift(int $id): bool
     {
         return DB::transaction(function () use ($id) {
@@ -172,12 +163,9 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Valida que el doctor no tenga turnos solapados.
-     * @param int $doctorId
-     * @param string $startsAt
-     * @param string $endsAt
-     * @param int|null $excludeShiftId
+     *
      * @throws \Exception Si hay turnos solapados
-    */
+     */
     private function validateNoOverlappingShifts(int $doctorId, string $startsAt, string $endsAt, ?int $excludeShiftId = null): void
     {
         $overlappingShifts = $this->shiftRepository->getOverlappingShifts($doctorId, $startsAt, $endsAt, $excludeShiftId);
@@ -189,10 +177,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Calcula las horas totales entre dos fechas.
-     * @param string $startsAt
-     * @param string $endsAt
-     * @return float
-    */
+     */
     private function calculateTotalHours(string $startsAt, string $endsAt): float
     {
         $start = \Carbon\Carbon::parse($startsAt);
@@ -203,10 +188,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Calcula el monto total de pacientes.
-     * @param array $attentions
-     * @param float $perPatientRateSnapshot
-     * @return float
-    */
+     */
     private function calculatePatientAmount(array $attentions, float $perPatientRateSnapshot): float
     {
         $totalAmount = 0;
@@ -222,9 +204,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Crea las atenciones para un turno.
-     * @param int $shiftId
-     * @param array $attentions
-    */
+     */
     private function createAttentions(int $shiftId, array $attentions): void
     {
         foreach ($attentions as $attentionData) {
@@ -237,7 +217,7 @@ class ShiftService implements ShiftServiceInterface
             ]);
 
             // Attachear patologías si existen, o asignar patología por defecto (ID 1)
-            if (isset($attentionData['pathologies']) && is_array($attentionData['pathologies']) && !empty($attentionData['pathologies'])) {
+            if (isset($attentionData['pathologies']) && is_array($attentionData['pathologies']) && ! empty($attentionData['pathologies'])) {
                 $this->attentionRepository->attachPathologies($attention->id, $attentionData['pathologies']);
             } else {
                 // Asignar patología por defecto (ID 1 - "Patología no especificada")
@@ -248,8 +228,7 @@ class ShiftService implements ShiftServiceInterface
 
     /**
      * Elimina todas las atenciones existentes de un turno.
-     * @param Model $shift
-    */
+     */
     private function deleteExistingAttentions(Model $shift): void
     {
         foreach ($shift->attentions as $attention) {
@@ -259,5 +238,53 @@ class ShiftService implements ShiftServiceInterface
             // Eliminar la atención
             $this->attentionRepository->deleteAttention($attention->id);
         }
+    }
+
+    /**
+     * Obtiene los turnos para mostrar en el calendario.
+     */
+    public function getShiftsForCalendar(int $month, int $year): array
+    {
+        $shifts = $this->shiftRepository->getShiftsByMonthAndYear($month, $year);
+
+        // Formatear turnos para el calendario
+        $calendar = [];
+        $now = \Carbon\Carbon::now();
+
+        foreach ($shifts as $shift) {
+            $date = \Carbon\Carbon::parse($shift->starts_at)->format('Y-m-d');
+
+            if (! isset($calendar[$date])) {
+                $calendar[$date] = [];
+            }
+
+            $calendar[$date][] = [
+                'id' => $shift->id,
+                'doctor' => $shift->doctor->full_name ?? 'Sin doctor',
+                'doctor_phone' => $shift->doctor->phone ?? null,
+                'shift_type' => $shift->shiftType->name ?? 'Sin tipo',
+                'starts_at' => $shift->starts_at,
+                'ends_at' => $shift->ends_at,
+                'total_hours' => $shift->total_hours,
+                'patients_count' => $shift->patients_count,
+                'total_amount' => $shift->total_amount,
+                'paid_at' => $shift->paid_at,
+                'is_past' => \Carbon\Carbon::parse($shift->starts_at)->isBefore($now),
+            ];
+        }
+
+        // Obtener información del mes
+        $date = \Carbon\Carbon::create($year, $month, 1);
+        $daysInMonth = $date->daysInMonth;
+        $firstDayOfWeek = $date->dayOfWeek; // 0 = Domingo, 6 = Sábado
+
+        return [
+            'calendar' => $calendar,
+            'month' => $month,
+            'year' => $year,
+            'month_name' => $date->locale('es')->monthName,
+            'days_in_month' => $daysInMonth,
+            'first_day_of_week' => $firstDayOfWeek,
+        ];
     }
 }

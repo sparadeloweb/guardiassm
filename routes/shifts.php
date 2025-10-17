@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Shifts\ShiftTypesController;
 use App\Http\Controllers\Shifts\ShiftsController;
+use App\Http\Controllers\Shifts\ShiftTypesController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('shift-types')->middleware('auth')->group(function () {
     Route::get('/', [ShiftTypesController::class, 'index'])->name('shift-types.index');
@@ -22,6 +22,8 @@ Route::prefix('shift-types')->middleware('auth')->group(function () {
 
 Route::prefix('shifts')->middleware('auth')->group(function () {
     Route::get('/', [ShiftsController::class, 'index'])->name('shifts.index');
+
+    Route::get('/calendar', [ShiftsController::class, 'calendar'])->name('shifts.calendar');
 
     Route::get('/create', [ShiftsController::class, 'create'])->name('shifts.create');
 

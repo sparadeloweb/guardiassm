@@ -44,6 +44,7 @@ interface Patient {
     DNI: string | null;
     phone: string | null;
     address: string | null;
+    health_insurance: string | null;
     email: string | null;
     gender: string | null;
     birth_date: string | null;
@@ -286,6 +287,20 @@ if (flashMessage.value) {
                                             variant="ghost"
                                             size="sm"
                                             class="h-8 data-[state=open]:bg-accent"
+                                            @click="toggleSort('health_insurance')"
+                                        >
+                                            Obra Social
+                                            <component
+                                                :is="getSortIcon('health_insurance')"
+                                                class="ml-2 h-4 w-4"
+                                            />
+                                        </Button>
+                                    </TableHead>
+                                    <TableHead class="text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            class="h-8 data-[state=open]:bg-accent"
                                             @click="toggleSort('gender')"
                                         >
                                             Género
@@ -314,7 +329,7 @@ if (flashMessage.value) {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-if="sortedPatients.length === 0">
-                                    <TableCell colspan="7" class="h-24 text-center">
+                                    <TableCell colspan="8" class="h-24 text-center">
                                         <EmptyState
                                             :icon="Search"
                                             title="No se encontraron resultados"
@@ -334,6 +349,9 @@ if (flashMessage.value) {
                                     </TableCell>
                                     <TableCell class="text-center text-foreground">
                                         {{ patient.phone || '-' }}
+                                    </TableCell>
+                                    <TableCell class="text-center text-foreground">
+                                        {{ patient.health_insurance || '-' }}
                                     </TableCell>
                                     <TableCell class="text-center text-foreground">
                                         {{ formatGender(patient.gender) }}

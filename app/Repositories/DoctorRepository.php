@@ -27,13 +27,18 @@ class DoctorRepository implements DoctorRepositoryInterface
     }
 
     /**
-     * Devuelve un doctor por su ID.
+     * Devuelve un doctor por su ID con todas sus relaciones.
+     *
      * @param int $id
      * @return \Illuminate\Database\Eloquent\Model
-    */
+     */
     public function getDoctorById(int $id): Model
     {
-        return $this->doctor->findOrFail($id);
+        return $this->doctor->with([
+            'shifts.shiftType',
+            'shifts.attentions.patient',
+            'shifts.attentions.pathologies',
+        ])->findOrFail($id);
     }
 
     /**
